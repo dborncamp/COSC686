@@ -1,5 +1,7 @@
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+    <title>Assignment2</title>
 <head>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
@@ -8,9 +10,15 @@ attribute  vec4 vPosition;
 attribute  vec4 vColor;
 varying vec4 fColor;
 
-uniform vec3 theta;
+//uniform vec3 theta;
 
 void main() {
+    gl.Position = vPosition;
+
+    // pass the color
+    fColor = vColor;
+
+/**
     // Compute the sines and cosines of theta for each of
     //   the three axes in one computation.
     vec3 angles = radians( theta );
@@ -32,11 +40,15 @@ void main() {
     mat4 rz = mat4( c.z, -s.z, 0.0, 0.0,
 		    s.z,  c.z, 0.0, 0.0,
 		    0.0,  0.0, 1.0, 0.0,
-		    0.0,  0.0, 0.0, 1.0 );
+		    0.0,  0.0, 0.0, 1.0 )
 
     fColor = vColor;
     gl_Position = rz * ry * rx *vPosition;
-} 
+*/
+
+} // end main 
+
+
 </script>
 
 
@@ -48,9 +60,9 @@ void main() {
 precision mediump float;
    
 varying vec4 fColor;
+//uniform vec4 u_colorMult;
 
-void
-main(){
+void main(){
     gl_FragColor = fColor;
 }
 </script>
@@ -62,11 +74,22 @@ main(){
 <script type="text/javascript" src="../Common/MV.js"></script>
 <script type="text/javascript" src="geometry.js"></script>
 <script type="text/javascript" src="2objects.js"></script>
+
+
+
 </head>
 
-<body>
-<canvas id="gl-canvas" width="512" height="512">
-Oops ... your browser doesn't support the HTML5 canvas element
-</canvas>
+<!--Changed the background color to be white -->
+<!--<body onload="init()" style="background-color:#FFFFFF"> -->
+
+<h2>Basic WebGL 3D Drawing</h2>
+
+<noscript><hr><h3>This page requires Javascript and a web browser that supports WebGL</h3><hr></noscript>
+
+<!--Changed the canvas background color to be black -->
+<canvas width=500 height=500 id="gl-canvas" </canvas>
+
+New window!
 </body>
 </html>
+

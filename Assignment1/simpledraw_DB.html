@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Basic WebGL 2D Drawing</title>
+<script type="text/javascript">
+
+"use strict";
+
+var gl;   // The webgl context, to be initialized in init().
+
+var prog; // Identifies the webgl shader program.
+var vertexAttributeBuffer;   // Identifies the databuffer where vertex coords are stored.
+var vertexAttributeLocation; // Identifies the vertex attribute variable in the shader program.
+var colorUniformLocation;    // Identifies the color uniform variable in the shader program.
+
+
+var vertexShaderSource =   // Source code for a simple vertex shader, to be passed to createProgram().
+     "precision highp float;\n" +
+     "attribute vec2 vertexCoords;\n" +
+     "void main() {\n" +
+     "   gl_Position = vec4(vertexCoords, 0.0, 1.0);\n" +
+     "}\n";
+     
+var fragmentShaderSource =  // Source code for a simple fragment shader, to be passed to createProgram().
+     "precision mediump float;\n" +
+     "uniform vec4 color;\n" +
+     "void main() {\n" +
+     "   gl_FragColor = color;\n" +
+     "}\n";
+     
+/**
+ * Creates a program for use in the WebGL context gl, and returns the
+ * identifier for that program.  If an error occurs while compiling or
+ * linking the program, an exception of type String is thrown.  The
+ * string contains the compilation or linking error.  If no error occurs,
+ * the program identifier is the return value of the function.
+ */
+function createProgram(gl, vertexShaderSource, fragmentShaderSource) {
+   var vsh = gl.createShader( gl.VERTEX_SHADER );
+   gl.shaderSource(vsh,vertexShaderSource);
+   gl.compileShader(vsh);
+   if ( ! gl.getShaderParameter(vsh, gl.COMPILE_STATUS) ) {
+      throw "Error in vertex shader:  " + gl.getShaderInfoLog(vsh);
+   }
+   var fsh = gl.createShader( gl.FRAGMENT_SHADER );
+   gl.shaderSource(fsh, fragmentShaderSource);
+   gl.compileShader(fsh);
+   if ( ! gl.getShaderParameter(fsh, gl.COMPILE_STATUS) ) {
+      throw "Error in fragment shader:  " + gl.getShaderInfoLog(fsh);
+   }
+   var prog = gl.createProgram();
+   gl.attachShader(prog,vsh);
+   gl.attachShader(prog, fsh);
+   gl.linkProgram(prog);
+   if ( ! gl.getProgramParameter( prog, gl.LINK_STATUS) ) {
+      throw "Link error in program:  " + gl.getProgramInfoLog(prog);
+   }
+   return prog;
+}
+
+
+/**
+ * Create a WebGL drawing context for a canvas element.  The parameter can
+ * be either a string that is the id of a canvas element, or it can be the
+ * canvas element itself.  If the context can't be created, an exception
+ * of type string is thrown.  Otherwise, the WebGL context is returned.
+ */
+function createWebGLContext(canvas) {
+   var c;
+   if ( ! canvas )
+      throw "Canvas required";
+   if (typeof canvas == "string")
+      c = document.getElementById(canvas);
+   else
+      c = canvas;
+   if ( ! c.getContext )
+      throw "No legal canvas provided";
+   var gl = c.getContext("webgl");
+   if ( ! gl ) {
+      gl = c.getContext("experimental-webgl");
+   }  
+   if ( ! gl )
+      throw "Can't create WebGLContext";
+   return gl;
+}
+
+
+/**
+ * A convenience function, used during debugging, which checks whether a
+ * GL error has occured in the drawing context, gl.  The method returns null
+ * if no error has occurred, and retuns a string that describes the error if
+ * one has occurred.  (The string is a littl more useful than the native GL
+ * error code.)  Note that once an error occurs, GL retains that error until
+ * this function is called, so you can't assume that the error occurred on
+ * the error occurred in the line that precedes the call to this function.
+ */
+function checkGLError() {
+      var e = gl.getError();
+      if ( e == gl.NO_ERROR )
+         return null;
+      else if ( e == gl.INVALID_ENUM )
+         return "Invalid constant";
+      else if ( e == gl.INVALID_VALUE )
+         return "Numeric argument out of range.";
+      else if ( e == gl.INVALID_OPERATION )
+         return "Invalid operation for current state.";
+      else if ( e == gl.OUT_OF_MEMORY )
+         return "Out of memory!!";
+      else
+         return "??? Unknown error ???";
+}
+
+
+/**
+ * Makes an array containing the xy-coordinates for a specified number of
+ * vertices equally spaced around a circle with a given radius and center.
+ * (centerX,centerY) is the center of the circle; radius gives its size;
+ * vertexCount is the number of vertices generated.  The return value is
+ * an array of 2 + 2*vertexCount numbers, with the first vetex repeated
+ * at the end of the array to make the set of vertices suitable for use
+ * with gl.TRIANGLE_FAN or gl.LINE_STRIP.
+ */
+function makeCircleVertices(centerX, centerY, radius, vertexCount) {
+   var circleData = [];
+   for ( var i = 0; i <= vertexCount; i++) {
+      var angle = i/vertexCount * 2 * Math.PI;
+      circleData.push( centerX + radius*Math.cos(angle) );
+      circleData.push( centerY + radius*Math.sin(angle) );
+   }
+   return circleData;
+}
+
+
+/**
+ * Draws a WebGL "primitive."  The first paramter must be one of the constants
+ * that specifiy primitives:  gl.POINTS, gl.LINES, gl.LINE_LOOP, gl.LINE_STRIP,
+ * gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN.  The second parameter must
+ * be an array of 4 numbers in the range 0.0 to 1.0, giving the RGBA component of
+ * the color of the primitive.  The third parameter must be an array of numbers.
+ * The length of the array must be an even number.  Each pair of numbers provides
+ * one vertex for the primitive.  NOTE: this function is function is very dependent
+ * on the particular shader program that is used in this file and on the setup
+ * that is done in the init() function.
+ */
+function drawPrimitive( primitiveType, color, vertices ) {
+   gl.bindBuffer(gl.ARRAY_BUFFER,vertexAttributeBuffer); // Sets which buffer to use for the vertex array.
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STREAM_DRAW);
+   gl.vertexAttribPointer(vertexAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+   gl.uniform4fv(colorUniformLocation, color);
+   gl.drawArrays(primitiveType, 0, vertices.length/2);
+}
+
+
+/**
+ * Draws the sample picture.  This is called by init() and when the setting of 
+ * the "Enable alpha blending" checkbox is changed by the user.  Note that the
+ * basic coordinate system, in which the x and y coordinates extend from -1 to 1,
+ * are assumed.
+ */
+function draw() {
+   //Specify clear values for the color buffers
+   gl.clearColor(1,1,1,1);
+   //Clear buffers to preset values, mask is the bitwise OR of one or more of
+   //COLOR_BUFFER_BIT DEPTH_BUFFER_BIT STENCIL_BUFFER_BIT
+   gl.clear(gl.COLOR_BUFFER_BIT);
+   
+   //Make the background white, with black border (canvas is already black)
+   gl.lineWidth(3);
+   drawPrimitive(gl.LINE_LOOP,[0,0,0,1],[-.99,-.99, -.99,.99, .99,.99, .99,-.99 ]);
+   
+   //Draw the "z"
+   drawPrimitive(gl.LINE_STRIP, [1,0,0,1], [ -0.9,.9, -0.4,0.9, -.9,0.3, -.4,.3]);
+   
+   //Draw the 5 bluelines
+   var space=.1
+   var ystart=.9
+   drawPrimitive(gl.LINES, [0,0,1,1], [.1,ystart, .9,ystart,
+                                       .1,ystart-space, .9,ystart-space,
+                                       .1,ystart-space*2, .9,ystart-space*2,
+                                       .1,ystart-space*3, .9,ystart-space*3,
+                                       .1,ystart-space*4, .9,ystart-space*4]);
+   
+   //Small yellow triangles
+   var tri_height=.2
+   var tri1_start=.25
+   var tri2_start=.55
+   drawPrimitive(gl.TRIANGLES, [1,1,0,1], [tri1_start, (ystart-space*4)-tri_height,
+                                           tri1_start+tri_height/2, ystart-space*4,
+                                           tri1_start+tri_height,  ystart-space*4-tri_height,
+                                           
+                                           tri2_start, (ystart-space*4)-tri_height,
+                                           tri2_start+tri_height/2, ystart-space*4,
+                                           tri2_start+tri_height,  ystart-space*4-tri_height]);
+   
+   //Green box-thing
+   drawPrimitive(gl.TRIANGLE_STRIP, [0,1,.2,1], [.1,-.9, .1,-.1, .8,-.1, .8,-.9 ]);
+   
+   //Black Circle
+   drawPrimitive(gl.TRIANGLE_FAN, [0,0,0,1], makeCircleVertices(-.5, -.5, .4, 64));
+   
+   //Big purple triangle
+   //drawPrimitive( gl.TRIANGLES, [1,0,1,1], [ -0.7,-0.6, 0.7,-0.6, 0,0.8 ]);
+   //Big yellow box
+   //drawPrimitive( gl.TRIANGLE_FAN, [1,1,0,0.5], [ -0.8,-0.2, -0.8,0.2, 0.8,0.2, 0.8,-0.2 ]);
+   
+   //outline for yellow box
+   //gl.lineWidth(3);
+   //drawPrimitive( gl.LINE_STRIP, [0,0,1,1], [ -0.8,-0.2, -0.8,0.2, 0.8,0.2, 0.8,-0.2, -0.8,-0.2 ]);  
+   gl.lineWidth(1);
+}
+
+
+/**
+ * This function is called when the user checks or unchecks the "Enable Alpha Blending"
+ * checkbox.  It enables or disables blending and redraws the picture.  Note that
+ * for alpha blending to have any effect, gl.blendFunc also has to be called; that is
+ * done in the init() method.
+ */
+function checkBlend() {
+   if (document.getElementById("blendCheckbox").checked) {
+      gl.enable(gl.BLEND);
+   }
+   else {
+      gl.disable(gl.BLEND);
+   }
+   draw();
+}
+
+
+/**
+ * Initializes the WebGL program including the relevant global variables
+ * and the WebGL state.  This is called for the body's onload event.
+ */
+function init() {
+   try {
+       gl = createWebGLContext("glcanvas");
+       prog = createProgram(gl,vertexShaderSource,fragmentShaderSource);
+       gl.useProgram(prog);
+       vertexAttributeLocation =  gl.getAttribLocation(prog, "vertexCoords"); // Get reference to vertexCoords attribute.
+       colorUniformLocation =  gl.getUniformLocation(prog, "color");  // Get reference to color uniform variable
+       vertexAttributeBuffer = gl.createBuffer();   // Create a buffer to hold vertex coordinates.
+       gl.enableVertexAttribArray(vertexAttributeLocation);  // Says that we will use a vertex array for vertex coords.
+       gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+                             gl.ZERO, gl.ONE ); // Set blend function for when alpha blending is enabled.
+   }
+   catch (e) {
+      alert("Could not initialize WebGL! " + e);
+      return;
+   }
+   draw();
+   document.getElementById("blendCheckbox").checked = false; // (required for reload in firefox)
+   document.getElementById("blendCheckbox").onchange = checkBlend();
+}
+
+</script>
+
+</head>
+
+<!--Changed the background color to be white -->
+<body onload="init()" style="background-color:#FFFFFF">
+
+<h2>Basic WebGL 2D Drawing</h2>
+
+<noscript><hr><h3>This page requires Javascript and a web browser that supports WebGL</h3><hr></noscript>
+
+<p><input type="checkbox" id="blendCheckbox"> <label for="blendCheckbox">Enable Alpha Blending</label></p>
+
+<!--Changed the canvas background color to be black -->
+<canvas width=500 height=500 id="glcanvas" style="background-color:white"></canvas>
+
+</body>
+</html>
+
