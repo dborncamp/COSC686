@@ -1,58 +1,65 @@
+"use strict";
+
 var canvas;
 var gl;
 var myCube;
+var program;
 
-
-// Identifies the databuffer where vertex coords are stored.
-var vertexAttributeBuffer;
-// Identifies the vertex attribute variable in the shader program.
-var vertexAttributeLocation;
-// Identifies the color uniform variable in the shader program.
-var colorUniformLocation;
+var NumVertices = 36;
 
 
 window.onload = function init(){
 //    try {
+        // get the canvas
         canvas = document.getElementById( "gl-canvas" );
 
+        // setup the canvas
         gl = WebGLUtils.setupWebGL( canvas );
         if ( !gl ) { alert( "WebGL isn't available" ); }
 
-        // get the canvas
-        var program = initShaders( gl, "vertex-shader", "fragment-shader" );
-        gl.useProgram( program );
+        gl.viewport( 0, 0, canvas.width, canvas.height );
+        gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+    
+        gl.enable(gl.DEPTH_TEST);
 
         // make the cube
         myCube = cube(1);
 
+        // get the canvas and set up the program
+        program = initShaders( gl, "vertex-shader", "fragment-shader" );
+        gl.useProgram( program );
+
+        // create a buffer to start loading the data onto the GPU
+        console.log(myCube.VertexColors);  // debugging line
+        var cBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(myCube.cubeTriangleVertexColors), gl.STATIC_DRAW );
+
+        // set up the vertex information
+        var vColor = gl.getAttribLocation( program, "vColor" );
+        gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
+        gl.enableVertexAttribArray( vColor );
+
+        // send the vertex information into the buffer to the GPU
+        var vBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(myCube.TriangleVertices), gl.STATIC_DRAW );
+
+        var vPosition = gl.getAttribLocation( program, "vPosition" );
+        gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
+        gl.enableVertexAttribArray( vPosition );
+
         // Draw it
-        drawPrimitive(gl.TRIANGLES, myCube.TriangleFaceColors, myCube.TriangleVertices);
+        gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+        //render()
 //    } catch (e) {
 //      alert("Could not initialize WebGL! " + e);
 //      return;
 //   }
 }
 
+function render(){
+    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-
-/**
- * Draws a WebGL "primitive."  The first paramter must be one of the constants
- * that specifiy primitives:  gl.POINTS, gl.LINES, gl.LINE_LOOP, gl.LINE_STRIP,
- * gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN.  The second parameter must
- * be an array of 4 numbers in the range 0.0 to 1.0, giving the RGBA component of
- * the color of the primitive.  The third parameter must be an array of numbers.
- * The length of the array must be an even number.  Each pair of numbers provides
- * one vertex for the primitive.  NOTE: this function is function is very dependent
- * on the particular shader program that is used in this file and on the setup
- * that is done in the init() function.
- */
-function drawPrimitive( primitiveType, color, vertices ) {
-   // Sets which buffer to use for the vertex array.
-   gl.bindBuffer(gl.ARRAY_BUFFER, vertexAttributeBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STREAM_DRAW);
-
-   gl.vertexAttribPointer(vertexAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-   gl.uniform4fv(colorUniformLocation, color);
-   gl.drawArrays(primitiveType, 0, vertices.length/2);
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
 }
-

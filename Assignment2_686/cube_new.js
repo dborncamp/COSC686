@@ -1,3 +1,4 @@
+"use strict";
 
 var canvas;
 var gl;
@@ -6,6 +7,7 @@ var NumVertices  = 36;
 
 var points = [];
 var colors = [];
+var myCube;
 
 var xAxis = 0;
 var yAxis = 1;
@@ -26,6 +28,7 @@ window.onload = function init()
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     colorCube();
+    myCube = cube(1);
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
@@ -38,9 +41,11 @@ window.onload = function init()
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
     
+    console.log(flatten(colors));
     var cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
+    //gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
     var vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
@@ -69,8 +74,9 @@ window.onload = function init()
         axis = zAxis;
     };
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
-        
-    render();
+      
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+    //render();
 }
 
 function colorCube()

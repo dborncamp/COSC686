@@ -4,6 +4,8 @@
     <title>Assignment2</title>
 <head>
 
+    
+<!-- vertex shader -->
 <script id="vertex-shader" type="x-shader/x-vertex">
 
 attribute  vec4 vPosition;
@@ -13,46 +15,13 @@ varying vec4 fColor;
 //uniform vec3 theta;
 
 void main() {
-    gl.Position = vPosition;
+    gl_Position = vPosition;
 
     // pass the color
     fColor = vColor;
 
-/**
-    // Compute the sines and cosines of theta for each of
-    //   the three axes in one computation.
-    vec3 angles = radians( theta );
-    vec3 c = cos( angles );
-    vec3 s = sin( angles );
-
-    // Remeber: thse matrices are column-major
-    mat4 rx = mat4( 1.0,  0.0,  0.0, 0.0,
-		    0.0,  c.x,  s.x, 0.0,
-		    0.0, -s.x,  c.x, 0.0,
-		    0.0,  0.0,  0.0, 1.0 );
-
-    mat4 ry = mat4( c.y, 0.0, -s.y, 0.0,
-		    0.0, 1.0,  0.0, 0.0,
-		    s.y, 0.0,  c.y, 0.0,
-		    0.0, 0.0,  0.0, 1.0 );
-
-
-    mat4 rz = mat4( c.z, -s.z, 0.0, 0.0,
-		    s.z,  c.z, 0.0, 0.0,
-		    0.0,  0.0, 1.0, 0.0,
-		    0.0,  0.0, 0.0, 1.0 )
-
-    fColor = vColor;
-    gl_Position = rz * ry * rx *vPosition;
-*/
-
 } // end main 
-
-
 </script>
-
-
-
 
 
 <script id="fragment-shader" type="x-shader/x-fragment">
@@ -79,14 +48,13 @@ void main(){
 
 </head>
 
-<!--Changed the background color to be white -->
-<!--<body onload="init()" style="background-color:#FFFFFF"> -->
+<!-- heading and making sure the webpage can handle scripts -->
 
 <h2>Basic WebGL 3D Drawing</h2>
 
 <noscript><hr><h3>This page requires Javascript and a web browser that supports WebGL</h3><hr></noscript>
 
-<!--Changed the canvas background color to be black -->
+<!--Make the canvas -->
 <canvas width=500 height=500 id="gl-canvas" </canvas>
 
 New window!
