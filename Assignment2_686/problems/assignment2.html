@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <title>Assignment2</title>
+<head>
+
+    
+<!-- vertex shader -->
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute  vec4 vPosition;
+attribute  vec4 vColor;
+varying vec4 fColor;
+
+//uniform vec3 theta;
+
+void main() {
+    gl_Position = vPosition;
+
+    // pass the color
+    fColor = vColor;
+
+} // end main 
+</script>
+
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+   
+varying vec4 fColor;
+//uniform vec4 u_colorMult;
+
+void main(){
+    gl_FragColor = fColor;
+}
+</script>
+
+
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="geometry.js"></script>
+<script type="text/javascript" src="2objects.js"></script>
+
+
+
+</head>
+
+<!-- heading and making sure the webpage can handle scripts -->
+
+<h2>Basic WebGL 3D Drawing</h2>
+
+<noscript><hr><h3>This page requires Javascript and a web browser that supports WebGL</h3><hr></noscript>
+
+<!--Make the canvas -->
+<canvas width=500 height=500 id="gl-canvas" </canvas>
+
+New window!
+</body>
+</html>
+
