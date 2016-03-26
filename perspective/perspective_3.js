@@ -37,7 +37,9 @@ var xposdown;
 var yposdown;
 var xposup;
 var yposup;
-var dragscale = 0.007;
+var dragscale = 0.01;
+
+var mysphere = sphere();
 
 
 var vertices = [
@@ -51,6 +53,19 @@ var vertices = [
         vec4(  0.5, -0.5, -0.5, 1.0 )
     ];
 
+
+/*
+var vertices = [
+        vec4( -0.0, -0.0,  1.0, 1.0 ),
+        vec4( -0.0,  1.0,  1.0, 1.0 ),
+        vec4(  1.0,  1.0,  1.0, 1.0 ),
+        vec4(  1.0, -0.0,  1.0, 1.0 ),
+        vec4( -0.0, -0.0, -0.0, 1.0 ),
+        vec4( -0.0,  1.0, -0.0, 1.0 ),
+        vec4(  1.0,  1.0, -0.0, 1.0 ),
+        vec4(  1.0, -0.0, -0.0, 1.0 )
+    ];
+*/
 var vertexColors = [
         [ 0.0, 0.0, 0.0, 1.0 ],  // black
         [ 1.0, 0.0, 0.0, 1.0 ],  // red
@@ -72,15 +87,13 @@ window.onload = function init() {
     colorCube();
     
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+    //gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
         
     aspect =  canvas.width/canvas.height;
     
     gl.enable(gl.DEPTH_TEST);
     
-    //
     //  Load shaders and initialize attribute buffers
-    //
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
@@ -88,24 +101,48 @@ window.onload = function init() {
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW );
     
+    // make a sphere
+/*
+    var sbuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, sbuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, mysphere.TriangleVertexColors, gl.STATIC_DRAW);
+*/
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    
     var vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor);
-
+/*
+    var scolor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(scolor, 768, gl.FLOAT, false, 0 , 0);
+    gl.enableVertexAttribArray(scolor);
+*/    
+    
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW );
+/*    
+    var vBuffer1 = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer1 );
+    gl.bufferData( gl.ARRAY_BUFFER, mysphere.TextureCoordinates, gl.STATIC_DRAW );
+*/    
     
+        
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
+/*
+    var vPosition1 = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition1, 768, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition1 );
+*/
+
  
     modelView = gl.getUniformLocation( program, "modelView" );
     projection = gl.getUniformLocation( program, "projection" );
     thetaLoc = gl.getUniformLocation(program, "theta"); 
     
 // buttons for viewing parameters
-
     document.getElementById("Button1").onclick = function(){near  *= 1.1; far *= 1.1;};
     document.getElementById("Button2").onclick = function(){near *= 0.9; far *= 0.9;};
     document.getElementById("Button3").onclick = function(){radius *= 2.0;};
@@ -127,51 +164,38 @@ window.onload = function init() {
         axis = zAxis;
     };
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
-/**    
-    document.onmousedown = function(){//console.log("hi");//mousemove();
-        xposdown = event.clientX;     // Get the horizontal coordinate
-        yposdown = event.clientY;     // Get the vertical coordinate
-        var coor = "Down: X coords: " + xposdown + ", Y coords: " + yposdown;
-        console.log(coor);
-    }
-    document.onmouseup = function(){
-        xposup = event.clientX;     // Get the horizontal coordinate
-        yposup = event.clientY;     // Get the vertical coordinate
-        var coorup = "Up: X coords: " + xposup + ", Y coords: " + yposup;
-        console.log(coorup);
-        
-        var xdiff = xposdown - xposup;
-        var ydiff = yposup - yposdown;
-        
-        at[0] = xdiff * dragscale;
-        at[1] = ydiff * dragscale;
-    }
-*/
+
     render(); 
 }
-//document.onmousemove
+
+/**
+ * Mouse interaction.
+ */
 function mousemove(){
     xpos = event.clientX;     // Get the horizontal coordinate
     ypos = event.clientY;     // Get the vertical coordinate
     
-    var self = this
+    var xdiff, ydiff;
     
-   document.onmousemove = function(){//console.log("hi");//mousemove();
+    var curx = at[0];
+    var cury = at[1];
+    
+    document.onmousemove = function(){//console.log("hi");//mousemove();
         xposdown = event.clientX;     // Get the horizontal coordinate
         yposdown = event.clientY;     // Get the vertical coordinate
-        
-        
-//        pressedhelper(xposdown, yposdown);
-        xdiff = (xpos - xposdown) * dragscale;
-        ydiff = (yposdown - ypos) * dragscale;
+       
+        xdiff = (xposdown - xpos) * dragscale;
+        ydiff = (ypos - yposdown) * dragscale;
 //        var coor = "Down: X coords: " + xposdown + ", Y coords: " + yposdown;
-//        console.log(coor + xdiff);
-        at[0] = xdiff;
-        at[1] = ydiff;
+        console.log(at[0], xpos, xposdown, xdiff);
+        at[0] = curx - xdiff;
+        at[1] = cury - ydiff;
     }
     
     var coor = "X coords: " + xpos + ", Y coords: " + ypos + "Down: " + xposdown;
+
     console.log(coor);
+
 }
 
 function stopmove(){
@@ -188,8 +212,7 @@ function pressedhelper(pressx, pressy){
 }
 
 
-function colorCube()
-{
+function colorCube(){
     quad( 1, 0, 3, 2 );
     quad( 2, 3, 7, 6 );
     quad( 3, 0, 4, 7 );
@@ -215,6 +238,7 @@ function quad(a, b, c, d) {
      
 }
 
+
 var render = function(){
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             
@@ -230,5 +254,7 @@ var render = function(){
     gl.uniform3fv(thetaLoc, theta);    
                 
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+    
+    //gl.drawArrays( gl.TRIANGLES, 36, 768 );
     requestAnimFrame(render);
 }

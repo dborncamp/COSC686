@@ -5,6 +5,7 @@
 
 attribute  vec4 vPosition;
 attribute  vec4 vColor;
+
 varying vec4 fColor;
 
 uniform mat4 modelView;
@@ -38,6 +39,7 @@ void main()
 
     gl_Position = projection * modelView * rz * ry * rx * vPosition;
 //      gl_Position = projection * modelView * vPosition;
+
     fColor = vColor;
 } 
 </script>
@@ -58,6 +60,7 @@ main()
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="geometry.js"></script>
 <script type="text/javascript" src="perspective_3.js"></script>
 
 <body>
