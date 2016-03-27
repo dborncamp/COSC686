@@ -64,7 +64,8 @@ main()
 <script type="text/javascript" src="perspective_3.js"></script>
 
 <body>
-<canvas id="gl-canvas" width="512" height="512" onmousedown="mousemove()" onmouseup="stopmove()">
+<canvas id="gl-canvas" width="512" height="512" onmousedown="mousemove()"
+    onmouseup="stopmove()" onmousewheel="mousewheel()" onwheel="mousewheel()">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
 
@@ -80,10 +81,11 @@ Oops ... your browser doesn't support the HTML5 canvas element
 <button id = "Button7">Increase phi</button>
 <button id = "Button8">Decrease phi</button>
 <p> </p>
-
+<!--
 <button id = "Button11">Increase FOV</button>
 <button id = "Button12">Decrease FOV</button>
 <p> </p>
+-->
 
 <button id= "xButton">Rotate X</button>
 <button id= "yButton">Rotate Y</button>

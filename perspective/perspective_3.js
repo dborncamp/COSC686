@@ -151,8 +151,8 @@ window.onload = function init() {
     document.getElementById("Button6").onclick = function(){theta_camera -= dr;};
     document.getElementById("Button7").onclick = function(){phi += dr;};
     document.getElementById("Button8").onclick = function(){phi -= dr;};
-    document.getElementById("Button11").onclick = function(){fovy -= 5.0;};
-    document.getElementById("Button12").onclick = function(){fovy += 5.0;};
+//    document.getElementById("Button11").onclick = function(){fovy -= 5.0;};
+//    document.getElementById("Button12").onclick = function(){fovy += 5.0;};
     
     document.getElementById( "xButton" ).onclick = function () {
         axis = xAxis;
@@ -197,20 +197,26 @@ function mousemove(){
     console.log(coor);
 
 }
-
+/**
+ * Zoom with the mouse wheel. It works but not quite the way I want to.
+ * 
+ * This just changes the FOV of 
+ */
+function mousewheel(){
+    var zoomy = event.deltaY;
+    
+    if (zoomy < 0){
+        fovy -= 5.0;
+    } else{
+        fovy += 5.0;
+    }
+    
+}
 function stopmove(){
     document.onmousemove = function(){
         //Nothing!!
     }
 }
-function pressedhelper(pressx, pressy){
-    hxpos = event.clientX;     // Get the horizontal coordinate
-    hypos = event.clientY;     // Get the vertical coordinate
-    
-    xdiff = pressx - hxpos;
-    console.log("pressedhelper: " + xdiff);
-}
-
 
 function colorCube(){
     quad( 1, 0, 3, 2 );
