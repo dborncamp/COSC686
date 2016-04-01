@@ -5,7 +5,6 @@
 
 attribute  vec4 vPosition;
 attribute  vec4 vColor;
-
 varying vec4 fColor;
 
 uniform mat4 modelView;
@@ -38,7 +37,9 @@ void main()
 		    0.0,  0.0, 0.0, 1.0 );
 
     gl_Position = projection * modelView * rz * ry * rx * vPosition;
-//      gl_Position = projection * modelView * vPosition;
+    //gl_Position = projection * modelView * vPosition;
+
+    //add in individual rotation;
 
     fColor = vColor;
 } 
@@ -53,7 +54,7 @@ varying vec4 fColor;
 void
 main()
 {
-    gl_FragColor = fColor;
+    gl_FragColor = vec4( 0.5, 0.5, 0.0, 1.0 );
 }
 </script>
 
@@ -61,13 +62,23 @@ main()
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
 <script type="text/javascript" src="geometry.js"></script>
-<script type="text/javascript" src="perspective_3.js"></script>
+
+
+<button id= "indx">Rot X Ind</button>
+<button id= "indy">Rot Y Ind</button>
+<button id= "indz">Rot Z Ind</button>
+<button id = "toggleind">Toggle Rotation</button>
+<p> </p>
+<button id= "irate_increase">inrease individual rotation</button>
+<button id = "irate_derease">Decrease individual rotation</button>
+<p> </p>
 
 <body>
-<canvas id="gl-canvas" width="512" height="512" onmousedown="mousemove()"
-    onmouseup="stopmove()" onmousewheel="mousewheel()" onwheel="mousewheel()">
-Oops ... your browser doesn't support the HTML5 canvas element
-</canvas>
+    <canvas id="gl-canvas" width="512" height="512" >
+        Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+
+<script type="text/javascript" src="perspective_3.js"></script>
 
 <p> </p>
 <button id = "Button1">Increase Near</button>

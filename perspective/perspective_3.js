@@ -1,10 +1,17 @@
 var canvas;
 var gl;
 
-var NumVertices  = 36;
+var program, program1;
+var vBuffer, vBuffer1, vBuffer2;     //points
+var vPosition, vPosition1, vPosition2; //points
 
-var pointsArray = [];
-var colorsArray = [];
+// object things
+var myCube, myCube1;
+var myCylinder;
+
+var points = [];
+var points1 = [];
+var points2 = [];
 
 var xAxis = 0;
 var yAxis = 1;
@@ -15,7 +22,20 @@ var theta = [ 0, 0, 0 ];
 
 var thetaLoc;
 
+
+var ixAxis = 0;
+var iyAxis = 1;
+var izAxis = 2;
+
+var iaxis = 0;
+var itheta = [ 0, 0, 0 ];
+
+var ithetaLoc;
+
+var irate = 5;
+
 var flag = true;
+var individual_rot = true;
 
 var near = 1.0;
 var far = 6.0;
@@ -40,42 +60,7 @@ var yposup;
 var dragscale = 0.01;
 
 var mysphere = sphere();
-
-
-var vertices = [
-        vec4( -0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5,  0.5,  0.5, 1.0 ),
-        vec4(  0.5,  0.5,  0.5, 1.0 ),
-        vec4(  0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5, -0.5, -0.5, 1.0 ),
-        vec4( -0.5,  0.5, -0.5, 1.0 ),
-        vec4(  0.5,  0.5, -0.5, 1.0 ),
-        vec4(  0.5, -0.5, -0.5, 1.0 )
-    ];
-
-
-/*
-var vertices = [
-        vec4( -0.0, -0.0,  1.0, 1.0 ),
-        vec4( -0.0,  1.0,  1.0, 1.0 ),
-        vec4(  1.0,  1.0,  1.0, 1.0 ),
-        vec4(  1.0, -0.0,  1.0, 1.0 ),
-        vec4( -0.0, -0.0, -0.0, 1.0 ),
-        vec4( -0.0,  1.0, -0.0, 1.0 ),
-        vec4(  1.0,  1.0, -0.0, 1.0 ),
-        vec4(  1.0, -0.0, -0.0, 1.0 )
-    ];
-*/
-var vertexColors = [
-        [ 0.0, 0.0, 0.0, 1.0 ],  // black
-        [ 1.0, 0.0, 0.0, 1.0 ],  // red
-        [ 1.0, 1.0, 0.0, 1.0 ],  // yellow
-        [ 0.0, 1.0, 0.0, 1.0 ],  // green
-        [ 0.0, 0.0, 1.0, 1.0 ],  // blue
-        [ 1.0, 0.0, 1.0, 1.0 ],  // magenta
-        [ 0.0, 1.0, 1.0, 1.0 ],  // cyan
-        [ 1.0, 1.0, 1.0, 1.0 ]   // white
-    ];
+canvas = document.getElementById( "gl-canvas" );
 
 window.onload = function init() {
 
@@ -84,60 +69,50 @@ window.onload = function init() {
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
     
-    colorCube();
-    
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    //gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
-        
+
+    myCube = cube(1);
+    myCylinder = cylinder(72, 3, true);
+    myCylinder.scale(0.5, 0.5, 0.5);
+    myCylinder.rotate(45.0, [ 1, 1, 1]);
+
+    myCube.scale(0.5, 0.5, 0.5);
+    myCube.rotate(45.0, [ 1, 1, 1]);
+    myCube.translate(.5,.5,.5);
+
+    myCube1 = cube(.25);
+    myCube1.translate(.0,.5,0);
+    
+    //Make the points array
+    points = points.concat(myCube.TriangleVertices);
+    points1 = points1.concat(myCube1.TriangleVertices);
+    points2 = points2.concat(myCylinder.TriangleVertices);
+    console.log(flatten(points));
+
     aspect =  canvas.width/canvas.height;
     
-    gl.enable(gl.DEPTH_TEST);
+    //gl.enable(gl.DEPTH_TEST);
     
     //  Load shaders and initialize attribute buffers
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
-    var cBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW );
-    
-    // make a sphere
-/*
-    var sbuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, sbuffer);
-    gl.bufferData( gl.ARRAY_BUFFER, mysphere.TriangleVertexColors, gl.STATIC_DRAW);
-*/
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    
-    var vColor = gl.getAttribLocation( program, "vColor" );
-    gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vColor);
-/*
-    var scolor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(scolor, 768, gl.FLOAT, false, 0 , 0);
-    gl.enableVertexAttribArray(scolor);
-*/    
-    
-    var vBuffer = gl.createBuffer();
+    // export data to the buffers
+    vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW );
-/*    
-    var vBuffer1 = gl.createBuffer();
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+
+    vBuffer1 = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer1 );
-    gl.bufferData( gl.ARRAY_BUFFER, mysphere.TextureCoordinates, gl.STATIC_DRAW );
-*/    
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points1), gl.STATIC_DRAW );
     
-        
-    var vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition );
-/*
-    var vPosition1 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition1, 768, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition1 );
-*/
+
+    vBuffer2 = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer2 );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points2), gl.STATIC_DRAW );
 
  
+    // Set up the view point
     modelView = gl.getUniformLocation( program, "modelView" );
     projection = gl.getUniformLocation( program, "projection" );
     thetaLoc = gl.getUniformLocation(program, "theta"); 
@@ -165,24 +140,46 @@ window.onload = function init() {
     };
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
 
+    // Indivdual rotation
+    document.getElementById( "indx" ).onclick = function () {
+        iaxis = ixAxis;
+    };
+    document.getElementById( "indy" ).onclick = function () {
+        iaxis = iyAxis;
+    };
+    document.getElementById( "indz" ).onclick = function () {
+        iaxis = izAxis;
+    };
+    document.getElementById("toggleind").onclick = function(){individual_rot = !individual_rot;};
+
+    document.getElementById("irate_increase").onclick = function(){irate +=2;};
+    document.getElementById("irate_derease").onclick = function(){irate -=2;};
+
+
+
+    canvas.addEventListener("mousedown",mousemove, false);
+    canvas.addEventListener("mouseup", stopmove, false);
+    canvas.addEventListener("mousewheel", mousewheel, false);
+    canvas.addEventListener("DOMMouseScroll", mousewheel, false);
+
     render(); 
 }
 
 /**
  * Mouse interaction.
  */
-function mousemove(){
-    xpos = event.clientX;     // Get the horizontal coordinate
-    ypos = event.clientY;     // Get the vertical coordinate
+function mousemove(event){
+    xpos = event.pageX;     // Get the horizontal coordinate
+    ypos = event.pageY;     // Get the vertical coordinate
     
     var xdiff, ydiff;
     
     var curx = at[0];
     var cury = at[1];
     
-    document.onmousemove = function(){//console.log("hi");//mousemove();
-        xposdown = event.clientX;     // Get the horizontal coordinate
-        yposdown = event.clientY;     // Get the vertical coordinate
+    document.onmousemove = function(event){//console.log("hi");//mousemove();
+        xposdown = event.pageX;     // Get the horizontal coordinate
+        yposdown = event.pageY;     // Get the vertical coordinate
        
         xdiff = (xposdown - xpos) * dragscale;
         ydiff = (ypos - yposdown) * dragscale;
@@ -202,50 +199,30 @@ function mousemove(){
  * 
  * This just changes the FOV of 
  */
-function mousewheel(){
-    var zoomy = event.deltaY;
+//canvas.onmousewheel = function (event){
+function mousewheel(event){
+    var zoomy = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
     
     if (zoomy < 0){
         fovy -= 5.0;
     } else{
         fovy += 5.0;
     }
+    console.log("Mousewheel "+fovy,zoomy);
     
 }
-function stopmove(){
+
+
+function stopmove(event){
     document.onmousemove = function(){
         //Nothing!!
     }
 }
 
-function colorCube(){
-    quad( 1, 0, 3, 2 );
-    quad( 2, 3, 7, 6 );
-    quad( 3, 0, 4, 7 );
-    quad( 6, 5, 1, 2 );
-    quad( 4, 5, 6, 7 );
-    quad( 5, 4, 0, 1 );
-}
-
-function quad(a, b, c, d) {
-    // Add things to the array.
-     pointsArray.push(vertices[a]); 
-     colorsArray.push(vertexColors[a]); 
-     pointsArray.push(vertices[b]); 
-     colorsArray.push(vertexColors[a]); 
-     pointsArray.push(vertices[c]); 
-     colorsArray.push(vertexColors[a]);     
-     pointsArray.push(vertices[a]); 
-     colorsArray.push(vertexColors[a]); 
-     pointsArray.push(vertices[c]); 
-     colorsArray.push(vertexColors[a]); 
-     pointsArray.push(vertices[d]); 
-     colorsArray.push(vertexColors[a]);
-     
-}
 
 
-var render = function(){
+
+function render(){
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             
     eye = vec3(radius*Math.sin(theta_camera)*Math.cos(phi), 
@@ -256,11 +233,70 @@ var render = function(){
     gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
     gl.uniformMatrix4fv( projection, false, flatten(pMatrix) );
 
-    if(flag) theta[axis] += 2.0;
+    if(flag) theta[axis] += 1.0;
     gl.uniform3fv(thetaLoc, theta);    
-                
-    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+
+    if(individual_rot){
+
+        var irotaxis = [1, 0, 0];
+        if(iaxis == 1){ irotaxis = [0, 1, 0];}
+        if(iaxis == 2){ irotaxis = [0, 0, 1];}
+
+        myCube.rotate(irate, irotaxis);
+        myCube1.rotate(irate, irotaxis);
+        myCylinder.rotate(irate, irotaxis);
+        
+        points = points.concat(myCube.TriangleVertices);
+        points1 = points1.concat(myCube1.TriangleVertices);
+        points2 = points2.concat(myCylinder.TriangleVertices);
+
+        console.log("Individual rotation: ", points[0], irate, irotaxis);
+
+    vBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+
+    vBuffer1 = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer1 );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points1), gl.STATIC_DRAW );
     
-    //gl.drawArrays( gl.TRIANGLES, 36, 768 );
+
+    vBuffer2 = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer2 );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points2), gl.STATIC_DRAW );
+
+
+    }
+                
+//    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+
+
+    //myCube
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+    vPosition = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition );
+
+    gl.drawArrays( gl.TRIANGLES, 0, myCube.TriangleVertices.length );
+
+    //myCube1
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer1 );
+    vPosition1 = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition1, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition1 );
+
+    gl.drawArrays( gl.TRIANGLES, 0, myCube1.TriangleVertices.length );
+
+
+
+    //myCylinder
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer2 );
+    vPosition2 = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition2, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition2 );
+
+    gl.drawArrays( gl.TRIANGLES, 0, myCylinder.TriangleVertices.length );
+
+
     requestAnimFrame(render);
 }
