@@ -54,7 +54,8 @@ varying vec4 fColor;
 void
 main()
 {
-    gl_FragColor = vec4( 0.5, 0.5, 0.0, 1.0 );
+    gl_FragColor = vec4( 0.0, 0.5, 0.0, 1.0 );
+    //gl_FragColor = fcolor;
 }
 </script>
 
@@ -63,16 +64,17 @@ main()
 <script type="text/javascript" src="../Common/MV.js"></script>
 <script type="text/javascript" src="geometry.js"></script>
 
-
+<!-- tyr to get each objet to rotate on its own local axis
 <button id= "indx">Rot X Ind</button>
 <button id= "indy">Rot Y Ind</button>
 <button id= "indz">Rot Z Ind</button>
 <button id = "toggleind">Toggle Rotation</button>
 <p> </p>
+
 <button id= "irate_increase">inrease individual rotation</button>
 <button id = "irate_derease">Decrease individual rotation</button>
 <p> </p>
-
+-->
 <body>
     <canvas id="gl-canvas" width="512" height="512" >
         Oops ... your browser doesn't support the HTML5 canvas element

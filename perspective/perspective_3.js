@@ -2,8 +2,10 @@ var canvas;
 var gl;
 
 var program, program1;
-var vBuffer, vBuffer1, vBuffer2;     //points
+var vBuffer, vBuffer1, vBuffer2;       //points
 var vPosition, vPosition1, vPosition2; //points
+var cBuffer, cBuffer1, cBuffer2;       //colors
+var vColor, vColor1, vColor2;          //colors
 
 // object things
 var myCube, myCube1;
@@ -12,6 +14,10 @@ var myCylinder;
 var points = [];
 var points1 = [];
 var points2 = [];
+
+var color = vec4(1.0, 0.0, 0.0, 1.0);
+var color1 = vec4(0.0, 1.0, 0.0, 1.0);
+var color2 = vec4(0.0, 0.0, 1.0, 1.0);
 
 var xAxis = 0;
 var yAxis = 1;
@@ -35,7 +41,7 @@ var ithetaLoc;
 var irate = 5;
 
 var flag = true;
-var individual_rot = true;
+var individual_rot = false;
 
 var near = 1.0;
 var far = 6.0;
@@ -102,15 +108,31 @@ window.onload = function init() {
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
+    cBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, color, gl.STATIC_DRAW );
+    
+
+    //myCube1
     vBuffer1 = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer1 );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points1), gl.STATIC_DRAW );
     
+    cBuffer1 = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer1 );
+    gl.bufferData( gl.ARRAY_BUFFER, color1, gl.STATIC_DRAW );   
 
+
+    //myCylinder
     vBuffer2 = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer2 );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points2), gl.STATIC_DRAW );
 
+    cBuffer2 = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer2 );
+    gl.bufferData( gl.ARRAY_BUFFER, color2, gl.STATIC_DRAW );   
+    
+    
  
     // Set up the view point
     modelView = gl.getUniformLocation( program, "modelView" );
@@ -141,29 +163,67 @@ window.onload = function init() {
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
 
     // Indivdual rotation
-    document.getElementById( "indx" ).onclick = function () {
-        iaxis = ixAxis;
-    };
-    document.getElementById( "indy" ).onclick = function () {
-        iaxis = iyAxis;
-    };
-    document.getElementById( "indz" ).onclick = function () {
-        iaxis = izAxis;
-    };
-    document.getElementById("toggleind").onclick = function(){individual_rot = !individual_rot;};
-
-    document.getElementById("irate_increase").onclick = function(){irate +=2;};
-    document.getElementById("irate_derease").onclick = function(){irate -=2;};
-
+//    document.getElementById( "indx" ).onclick = function () {
+//        iaxis = ixAxis;
+//    };
+//    document.getElementById( "indy" ).onclick = function () {
+//        iaxis = iyAxis;
+//    };
+//    document.getElementById( "indz" ).onclick = function () {
+//        iaxis = izAxis;
+//    };
+//    document.getElementById("toggleind").onclick = function(){
+//        individual_rot = !individual_rot;
+//    };
+//
+//    document.getElementById("irate_increase").onclick = function(){
+//        irate +=2;
+//    };
+//    document.getElementById("irate_derease").onclick = function(){
+//        irate -=2;
+//    };
 
 
     canvas.addEventListener("mousedown",mousemove, false);
     canvas.addEventListener("mouseup", stopmove, false);
     canvas.addEventListener("mousewheel", mousewheel, false);
     canvas.addEventListener("DOMMouseScroll", mousewheel, false);
+    document.addEventListener("keydown",arrowKey,false);
 
     render(); 
 }
+
+function updatePoints(){
+    points = [].concat(myCube.TriangleVertices);
+    points1 = [].concat(myCube1.TriangleVertices);
+    points2 = [].concat(myCylinder.TriangleVertices);
+}
+/**
+ * Arrow keys
+ */
+function arrowKey(e) {
+
+    e = e || window.event;
+
+    if (e.keyCode == '38') {
+        // up arrow
+        myCube.translate(0, .1, 0);
+    }
+    else if (e.keyCode == '40') {
+        // down arrow
+        myCube.translate(0, -.1, 0);
+    }
+    else if (e.keyCode == '37') {
+       // left arrow
+       myCube.translate(-.1, 0, 0);
+    }
+    else if (e.keyCode == '39') {
+       // right arrow
+       myCube.translate(.1, 0, 0);
+    }
+
+}
+
 
 /**
  * Mouse interaction.
@@ -184,14 +244,14 @@ function mousemove(event){
         xdiff = (xposdown - xpos) * dragscale;
         ydiff = (ypos - yposdown) * dragscale;
 //        var coor = "Down: X coords: " + xposdown + ", Y coords: " + yposdown;
-        console.log(at[0], xpos, xposdown, xdiff);
+        //console.log(at[0], xpos, xposdown, xdiff);
         at[0] = curx - xdiff;
         at[1] = cury - ydiff;
     }
     
-    var coor = "X coords: " + xpos + ", Y coords: " + ypos + "Down: " + xposdown;
+    //var coor = "X coords: " + xpos + ", Y coords: " + ypos + "Down: " + xposdown;
 
-    console.log(coor);
+    //console.log(coor);
 
 }
 /**
@@ -208,7 +268,7 @@ function mousewheel(event){
     } else{
         fovy += 5.0;
     }
-    console.log("Mousewheel "+fovy,zoomy);
+    //console.log("Mousewheel "+fovy,zoomy);
     
 }
 
@@ -235,6 +295,8 @@ function render(){
 
     if(flag) theta[axis] += 1.0;
     gl.uniform3fv(thetaLoc, theta);    
+    
+    updatePoints()
 
     if(individual_rot){
 
@@ -251,7 +313,13 @@ function render(){
         points2 = points2.concat(myCylinder.TriangleVertices);
 
         console.log("Individual rotation: ", points[0], irate, irotaxis);
+    }
 
+
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, color, gl.STATIC_DRAW );
+    
     vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
@@ -266,7 +334,7 @@ function render(){
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points2), gl.STATIC_DRAW );
 
 
-    }
+    
                 
 //    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
 
