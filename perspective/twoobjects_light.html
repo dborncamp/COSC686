@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script id="vertex-shader" type="x-shader/x-vertex">
+            attribute  vec4 vPosition;
+            attribute  vec4 vColor;
+            attribute  vec3 vNormal;
+            varying vec4 fColor;
+
+            uniform mat4 modelView;
+            uniform mat4 projection;
+            uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+            uniform vec4 lightPosition;
+            uniform float shininess;
+
+            uniform vec3 theta;
+
+            void main() {
+                vec3 pos = -(modelView * vPosition).xyz;
+                vec3 light = lightPosition.xyz;
+                vec3 L = normalize( light - pos );
+                
+                vec3 E = normalize( -pos );
+                vec3 H = normalize( L + E );
+                
+                vec4 NN = vec4(vNormal, 0);
+
+                // Transform vertex normal into eye coordinates
+                vec3 N = normalize( (modelView * NN).xyz);
+
+                // Compute terms in the illumination equation
+                vec4 ambient = ambientProduct;
+
+                float Kd = max( dot(L, N), 0.0 );
+                vec4  diffuse = Kd * diffuseProduct;
+
+                float Ks = pow( max(dot(N, H), 0.0), shininess );
+                vec4  specular = Ks * specularProduct;
+                
+                if( dot(L, N) < 0.0 ) {
+                    specular = vec4(0.0, 0.0, 0.0, 1.0);
+                }
+            
+                gl_Position = projection * modelView * vPosition;
+
+                fColor = ambient + diffuse + specular + vColor;
+                
+                float max = fColor.r;
+                if (fColor.g > max){
+                    max = fColor.g;
+                }
+                if (fColor.b > max){
+                    max = fColor.b;
+                }
+                if (fColor.a > max){
+                    max = fColor.a;
+                }
+                
+                fColor = fColor / max;
+    
+                fColor.a = 1.0;
+            }
+        </script>
+
+        <script id="fragment-shader" type="x-shader/x-fragment">
+            #ifdef GL_ES
+                precision highp float;
+            #endif
+
+            varying vec4 fColor;
+
+            void main(){
+                //gl_FragColor = vec4( 0.0, 0.5, 0.0, 1.0 );
+                gl_FragColor = fColor;
+            }
+        </script>
+    </head>
+
+    <script type="text/javascript" src="../Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../Common/initShaders.js"></script>
+    <script type="text/javascript" src="../Common/MV.js"></script>
+    <script type="text/javascript" src="geometry.js"></script>
+    <script type="text/javascript" src="twoobjects_light.js"></script>
+    
+    <body>
+        <canvas id="gl-canvas" width="512" height="512" >
+            Oops ... your browser doesn't support the HTML5 canvas element
+        </canvas>
+        <p> </p>
+        <button id= "xButton">Rotate X</button>
+        <button id= "yButton">Rotate Y</button>
+        <button id= "zButton">Rotate Z</button>
+        <button id = "ButtonT">Toggle Rotation</button>
+        <p> </p>
+    </body>
+</html>

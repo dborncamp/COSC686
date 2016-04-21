@@ -95,8 +95,8 @@ var cubeVertexColors = [
     [ 0.0, 0.0, 1.0, 1.0 ],  // blue
     [ 1.0, 0.0, 1.0, 1.0 ],  // magenta
     [ 0.0, 1.0, 1.0, 1.0 ],  // cyan
-    [ 1.0, 1.0, 1.0, 1.0 ],   // white
-    [ 0.0, 0.0, 0.0, 1.0 ]  // black
+    [ 1.0, 1.0, 1.0, 1.0 ],  // white
+    [ 0.0, 0.0, 0.0, 1.0 ]   // black
 ];
 
 var cubeElements = [
@@ -171,6 +171,7 @@ var cubeTriangleNormals = [];
 for ( var i = 0; i < cubeElements.length; i++ ) {
     cubeTriangleVertices.push( cubeVertices[cubeElements[i]] );
     cubeTriangleVertexColors.push( cubeVertexColors[cubeElements[i]] );
+    //cubeTriangleVertexColors.push( cubeVertexColors[i] );
     cubeTextureCoordinates.push( faceTexCoord[cubeTexElements[i]]);
     cubeTriangleNormals.push(cubeFaceNormals[cubeNormalElements[i]]);
 }
@@ -287,7 +288,7 @@ return data;
 
                   translate(dx, dy, dz)
                   scale(sz, sy, sz)
-                  rotate(angle, [axisx, axisy, axisz])
+                  rotate(angle, [axisx, axisy, axisz]) points are relative to origin
 
 
 */

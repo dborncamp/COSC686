@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script id="vertex-shader" type="x-shader/x-vertex">
+            attribute  vec4 vPosition;
+            attribute  vec4 vColor;
+            varying vec4 fColor;
+
+            uniform mat4 modelView;
+            uniform mat4 projection;
+
+            uniform vec3 theta;
+
+            void main() {
+                gl_Position = projection * modelView * vPosition;
+
+                fColor = vColor;
+            } 
+        </script>
+
+        <script id="fragment-shader" type="x-shader/x-fragment">
+            precision mediump float;
+
+            varying vec4 fColor;
+
+            void
+            main(){
+                //gl_FragColor = vec4( 0.0, 0.5, 0.0, 1.0 );
+                gl_FragColor = fColor;
+            }
+        </script>
+    </head>
+
+    <script type="text/javascript" src="../Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../Common/initShaders.js"></script>
+    <script type="text/javascript" src="../Common/MV.js"></script>
+    <script type="text/javascript" src="geometry.js"></script>
+    <script type="text/javascript" src="twoobjects.js"></script>
+    
+    <body>
+        <canvas id="gl-canvas" width="512" height="512" >
+            Oops ... your browser doesn't support the HTML5 canvas element
+        </canvas>
+        <button id= "xButton">Rotate X</button>
+        <button id= "yButton">Rotate Y</button>
+        <button id= "zButton">Rotate Z</button>
+        <button id = "ButtonT">Toggle Rotation</button>
+        <p> </p>
+    </body>
+</html>

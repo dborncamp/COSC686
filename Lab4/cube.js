@@ -119,7 +119,7 @@ function quad(a, b, c, d)
         points.push( vertices[indices[i]] );
         //colors.push( vertexColors[indices[i]] );
     
-        // for solid colored faces use 
+        // for solid colored faces use
         colors.push(vertexColors[a]);
         
     }
