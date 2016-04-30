@@ -33,19 +33,19 @@ var normals = [];
 var cutoffs = []; // Array that holds indicies
 var period = [];
 
-var nspheres = 5;
+var nspheres = 8; // includes sun
 var thetaSeed = [];
 
 // Lighting things
-var lightPosition = vec4( 0.0, 2.0, 0.0, 0.0 );
-var lightAmbient = vec4( 0.0, 0.0, 0.0, 1.0 );
-var lightDiffuse = vec4( 1.0, 1.0, 0.0, .1 );
+var lightPosition = vec4( 0.0, 0.0, 0.0, 0.0 );
+var lightAmbient = vec4( 0.1, 0.1, 0.1, 1.0 );
+var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
 
 // Planet Material
 var materialAmbient = vec4( 0.3, 0.3, 0.3, 1.0 );
-var materialDiffuse = vec4( 1.0, 1.0, 1.0, 0.1);
-var materialSpecular = vec4( 0.5, 0.5, 0.5, 1.0 );
+var materialDiffuse = vec4( 1.0, 1.0, 1.0, 1.0);
+var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
 var materialShininess = 50.;
 
 var texture;
@@ -73,7 +73,12 @@ window.onload = function init(){
     
     points = mySphere.TriangleVertices;    
     normals = mySphere.TriangleNormals;
-    colors = mySphere.TriangleVertexColors;
+    //colors = mySphere.TriangleVertexColors;
+    for (var i=0; i<mySphere.TriangleVertexColors.length; i++){
+        colors.push([1.0, 1.0, 1.0, 1.0]);
+    }
+    //console.log(mySphere.TriangleVertexColors);
+    //console.log(mySphere.TriangleVertexColors[0]);
     cutoffs.push(0);
     cutoffs.push(mySphere.TriangleVertices.length + cutoffs[cutoffs.length-1]);
     period.push(0);
@@ -99,7 +104,7 @@ window.onload = function init(){
         var per = Math.pow(radius, 3/2);
         var speed = (2 * Math.PI * radius) /per;
         speed = 360/per;
-        thetaSeed.push(speed/600);
+        thetaSeed.push(speed/1000);
         
         // push everything
         points = points.concat(newSpere.TriangleVertices);
@@ -166,15 +171,17 @@ window.onload = function init(){
 
 
     // draw things
-    console.log(spintheta, cutoffs, spintheta.length, cutoffs.length, thetaSeed);
+    //console.log(spintheta, cutoffs, spintheta.length, cutoffs.length, thetaSeed);
     render();
 }
 
 
+/**
+ * Make a random integer. If itis between -15 and 15 try again recursively.
+ */
 function randomIntFromInterval(min, max){
     var retint = Math.floor(Math.random()*(max-min+1)+min);
     if ((retint > -15) && (retint < 15)){
-        console.log("Found an issue ", retint);
         return randomIntFromInterval(min, max);
     } else {
         return retint;
@@ -200,18 +207,26 @@ function render(){
             gl.uniform4fv(gl.getUniformLocation(program, "diffuseProduct"),
                 flatten(gold.materialDiffuse) );
             gl.uniform4fv(gl.getUniformLocation(program, "specularProduct"), 
-                flatten(gold.materialSpecular) );	
+                flatten(gold.materialSpecular) );
+            gl.uniform4fv(gl.getUniformLocation(program, "materialEmissiveColor"), 
+                flatten(vec4(0.1, 0.1, 0.1, 1.0)) );
             gl.uniform4fv(gl.getUniformLocation(program, "lightPosition"), 
                 flatten(lightPosition) );
+            gl.uniform1f( gl.getUniformLocation(program, "shininess"),
+                gold.materialShininess );
         } else{
             gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct"),
                 flatten(ambientProduct));
             gl.uniform4fv(gl.getUniformLocation(program, "diffuseProduct"),
                 flatten(diffuseProduct) );
             gl.uniform4fv(gl.getUniformLocation(program, "specularProduct"), 
-                flatten(specularProduct) );	
+                flatten(specularProduct) );
+            gl.uniform4fv(gl.getUniformLocation(program, "materialEmissiveColor"), 
+                flatten(vec4(1.0, 1.0, 1.0, 1.0)) );
             gl.uniform4fv(gl.getUniformLocation(program, "lightPosition"), 
                 flatten(lightPosition) );
+            gl.uniform1f( gl.getUniformLocation(program, "shininess"),
+            materialShininess );
         }
             
         // Only allow things to rotate along z axis
@@ -261,8 +276,8 @@ function mousemove(event){
         xposdown = event.pageX;     // Get the horizontal coordinate
         yposdown = event.pageY;     // Get the vertical coordinate
        
-        xdiff = (xposdown - xpos) * dragscale;
-        ydiff = (ypos - yposdown) * dragscale;
+        xdiff = (xpos - xposdown) * dragscale;
+        ydiff = (yposdown - ypos) * dragscale;
         
         var newx = curx - xdiff;
         var newy = cury - ydiff;
@@ -300,10 +315,10 @@ function mousewheel(event){
     
     if (zoomy < 0){
         //fovy -= 5.0;
-        lightPosition[2] -= .5;
+        if (lightPosition[2] > -10) lightPosition[2] -= .5;
     } else{
         //fovy += 5.0;
-        lightPosition[2] += .5;
+        if (lightPosition[2] < 10) lightPosition[2] += .5;
     }
     //console.log("Mousewheel "+fovy,zoomy);
     

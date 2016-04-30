@@ -10,6 +10,7 @@
             uniform mat4 modelView;
             uniform mat4 projection;
             uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+            uniform vec4 materialEmissiveColor;
             uniform vec4 lightPosition;
             uniform float shininess;
 
@@ -43,7 +44,7 @@
             
                 gl_Position = projection * modelView * vPosition;
 
-                fColor = ambient + diffuse + specular + vColor;
+                fColor = (ambient + diffuse + specular) * vColor;
                 //fColor = vColor;
                 
                 float max = 1.0;
@@ -100,6 +101,8 @@
     <body>
         Move the light position by clicking and dragging the mouse to move x
         and y and using the mouse wheel to change z.<br>
+        The Sun uses the gold material from the geometry.js package 
+        while the planets use the default color. <br><br>
         <button id = "ButtonT">Toggle Rotation</button>
         <p> </p>
         <canvas id="gl-canvas" width="512" height="512" >
